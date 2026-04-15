@@ -1,17 +1,30 @@
 const API = "http://localhost:5000";
 
 async function generate() {
+  console.log("🔥 Generate button clicked");
+
   const topic = document.getElementById("topic").value;
+  console.log("📌 Topic:", topic);
 
-  const res = await fetch(`${API}/generate`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ topic })
-  });
+  try {
+    const res = await fetch(`/generate`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ topic })
+    });
 
-  const data = await res.json();
-  document.getElementById("jsonBox").value =
-    JSON.stringify(data, null, 2);
+    console.log("📡 Request sent");
+
+    const data = await res.json();
+    console.log("✅ Response received:", data);
+
+    document.getElementById("jsonBox").value =
+      JSON.stringify(data, null, 2);
+
+  } catch (err) {
+    console.error("❌ Error:", err);
+    alert("Error occurred. Check console.");
+  }
 }
 
 async function process() {

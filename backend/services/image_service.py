@@ -1,23 +1,19 @@
-from openai import OpenAI
-import base64
 import os
-from config import OPENAI_API_KEY
-
-client = OpenAI(api_key=OPENAI_API_KEY)
+import requests
 
 def generate_image(prompt, path, scene_no):
-    result = client.images.generate(
-        model="gpt-image-1",
-        prompt=prompt,
-        size="1024x1792"
-    )
+    print(f"🎨 Generating image for scene {scene_no}")
 
-    image_base64 = result.data[0].b64_json
-    image_bytes = base64.b64decode(image_base64)
+    # Using free placeholder image API (for now)
+    image_url = f"https://picsum.photos/seed/{scene_no}/1024/1792"
+
+    response = requests.get(image_url)
 
     file_path = os.path.join(path, f"scene_{scene_no}.png")
 
     with open(file_path, "wb") as f:
-        f.write(image_bytes)
+        f.write(response.content)
+
+    print(f"✅ Image saved: {file_path}")
 
     return file_path
