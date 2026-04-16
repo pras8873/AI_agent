@@ -43,31 +43,43 @@ def generate():
 
     return jsonify(result)
 
+from services.image_service import generate_image
+from utils.file_utils import create_topic_folder
+import os
+
 @app.route("/process", methods=["POST"])
 def process():
+    print("🎬 /process endpoint hit")
+
     data = request.json
-    topic = data["topic"]
+    topic = data.get("topic", "default")
+
+    print("📌 Topic:", topic)
 
     folder = create_topic_folder(topic)
-    results = []
 
-    for scene in data["scenes"]:
-        scene_no = scene["scene_no"]
+    # Create images folder
+    images_path = os.path.join(folder, "images")
+    os.makedirs(images_path, exist_ok=True)
 
-        img = generate_image(scene["image_prompt"], folder, scene_no)
-        vid = generate_video(img, scene_no, folder)
+    scenes = data.get("scenes", [])
 
-        results.append({
-            "scene": scene_no,
-            "image": img,
-            "video": vid
-        })
+    generated_files = []
 
-    return jsonify({
-        "status": "completed",
-        "output_folder": folder,
-        "files": results
-    })
+    for scene in scenes:
+        scene_no = scene.get("scene_no")
+        prompt = scene.get("image_prompt")
+
+        print(f"🎨 Scene {scene_no}: {prompt}")
+
+        img_path = generate_image(prompt, images_path, scene_no)
+
+        generated_files.append(img_path)
+
+    return {
+        "status": "success",
+        "images": generated_files
+    }
 
 import subprocess
 
@@ -84,6 +96,42 @@ def merge_audio(video_path, audio_path, output_path):
     ]
 
     subprocess.run(command)
+
+from services.image_service import generate_image
+import os
+
+@app.route("/process-images", methods=["POST"])
+def process_images():
+    print("🎬 Processing images")
+
+    data = request.json
+    token = data.get("token")   # 👈 VERY IMPORTANT
+    topic = data.get("topic", "default")
+
+    folder = os.path.join("output", topic.replace(" ", "_"), "images")
+    os.makedirs(folder, exist_ok=True)
+
+    images = []
+
+    for scene in data.get("scenes", []):
+        img_path = generate_image(
+            scene["image_prompt"],
+            folder,
+            scene["scene_no"],
+            token
+        )
+
+        if img_path:
+            images.append(img_path)
+
+    return {
+        "status": "success",
+        "images": images
+    }
+
+@app.route('/output/<path:filename>')
+def serve_image(filename):
+    return send_from_directory('output', filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
