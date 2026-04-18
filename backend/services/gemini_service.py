@@ -12,19 +12,24 @@ URL = "https://aipipe.org/openai/v1/chat/completions"
 
 def generate_content(topic):
     prompt = f"""
-You are a professional YouTube Shorts script creator.
+You are an expert viral YouTube Shorts creator + AI visual prompt engineer.
 
-Create a HIGHLY engaging short-form video content package for the topic: "{topic}"
+Create a COMPLETE high-quality content package for: "{topic}"
 
-⚠️ STRICT RULES (MUST FOLLOW):
-- Output ONLY valid JSON
-- DO NOT add explanation
-- DO NOT add markdown
-- MUST generate EXACTLY 12 scenes
-- Each scene MUST be unique and detailed
-- Maintain SAME CHARACTER (young Indian male/female) in ALL scenes
+⚠️ STRICT OUTPUT RULES:
+- ONLY valid JSON
+- NO markdown
+- NO explanation
+- EXACTLY 10 scenes (NOT 12)
+- Same character in ALL scenes
 
-JSON FORMAT (STRICT):
+CHARACTER:
+- 25-year-old Indian male
+- short black hair, light beard
+- blue t-shirt, jeans
+- SAME face, SAME outfit, SAME person
+
+JSON FORMAT:
 {{
   "topic": "",
   "video_title": "",
@@ -41,24 +46,57 @@ JSON FORMAT (STRICT):
   ]
 }}
 
-CONTENT RULES:
-- Script: Hinglish, viral style, hook + explanation + CTA
-- Tone: energetic, relatable, slightly dramatic
-- Tags: at least 10 SEO keywords
-- Description: engaging + searchable
+🔥 SCRIPT RULES:
+- Hinglish
+- Strong hook in first line
+- Curiosity + surprise
+- Simple explanation
+- End with CTA
 
-IMAGE PROMPT RULES:
-- MUST include: portrait, young Indian character, cinematic lighting, attractive background, realistic, 4K
-- Add specific action per scene
+🔥 IMAGE PROMPT RULES (VERY STRICT):
+Each image_prompt MUST include:
 
-ANIMATION RULES:
-- EXACT format: "4-second animation: ..."
-- Describe motion clearly
+1. CLEAR ACTION (what character is doing)
+2. PHYSICS EXPERIMENT visible
+3. HAND INTERACTION (must)
+4. ENVIRONMENT (room/lab/home etc.)
+5. VISUAL EFFECT (spark, motion, energy, etc.)
 
-⚠️ VERY IMPORTANT:
-- Scenes count MUST be exactly 10
-- If not 10 → response is INVALID
-- Ensure full JSON completeness
+⚠️ MUST AVOID:
+- portrait
+- close-up face
+- standing idle
+- posing
+
+✅ MUST INCLUDE:
+- "mid shot"
+- "hands interacting"
+- "experiment clearly visible"
+- "dynamic action"
+
+🔥 ANIMATION RULES:
+Format EXACTLY:
+"4-second animation: [camera movement + subject motion + effect]"
+
+Example:
+"4-second animation: slight zoom-in, hand touches metal, small electric spark appears"
+
+🔥 SCENE QUALITY:
+- Each scene must be visually DIFFERENT
+- Show progression of concept
+- Not repetitive
+
+🔥 TAGS:
+- Minimum 12
+- SEO optimized
+
+🔥 DESCRIPTION:
+- Engaging + searchable
+
+⚠️ FINAL CHECK:
+- Exactly 10 scenes
+- All scenes have detailed prompts
+- JSON must be valid
 """
 
     try:

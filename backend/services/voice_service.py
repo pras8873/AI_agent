@@ -1,60 +1,45 @@
+from google import genai
+from google.genai import types
+import wave
 import os
-import requests
-import base64
-from dotenv import load_dotenv
-from utils.file_utils import unique_filename
 
-load_dotenv()
+def save_wave(filename, pcm, channels=1, rate=24000, sample_width=2):
+    with wave.open(filename, "wb") as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(sample_width)
+        wf.setframerate(rate)
+        wf.writeframes(pcm)
 
-API_KEY = os.getenv("GEMINI_API_KEY")
+def generate_voice(script, output_path="output/audio.wav"):
+    if not script or script.strip() == "":
+        raise ValueError("Script is empty")
 
-URL = f"https://texttospeech.googleapis.com/v1beta1/text:synthesize?key={API_KEY}"
+    client = genai.Client()  # ✅ NO api_version override
 
-
-def generate_voice(text, path):
-    print("🎤 Generating Gemini voice...")
-
-    payload = {
-        "audioConfig": {
-            "audioEncoding": "MP3",
-            "pitch": 0,
-            "speakingRate": 1
-        },
-        "input": {
-            "prompt": "Read aloud in curious and slightly dramatic tone.",
-            "text": text
-        },
-        "voice": {
-            "languageCode": "en-IN",
-            "modelName": "gemini-2.5-flash-tts",
-            "name": "Charon"
-        }
-    }
-
-    response = requests.post(
-        URL,
-        headers={"Content-Type": "application/json"},
-        json=payload
+    response = client.models.generate_content(
+        model="gemini-3.1-flash-tts-preview",  # ✅ correct model
+        contents=[script],  # ✅ must be list
+        config=types.GenerateContentConfig(
+            response_modalities=["AUDIO"],  # ✅ correct for this method
+            speech_config=types.SpeechConfig(
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                        voice_name="Puck"   # 🔥 best voice
+                    )
+                )
+            )
+        )
     )
 
-    data = response.json()
-
-    print("🔍 Voice response:", data)
-
+    # ✅ Extract audio safely
     try:
-        audio_base64 = data["audioContent"]
-        audio_bytes = base64.b64decode(audio_base64)
-
-        filename = unique_filename("voice", "mp3")
-        file_path = os.path.join(path, filename)
-
-        with open(file_path, "wb") as f:
-            f.write(audio_bytes)
-
-        print(f"✅ Voice saved: {file_path}")
-
-        return file_path
-
+        audio_data = response.candidates[0].content.parts[0].inline_data.data
     except Exception as e:
-        print("❌ Voice error:", e)
-        return None
+        print("❌ Full response:", response)
+        raise RuntimeError("Audio extraction failed") from e
+
+    os.makedirs("output", exist_ok=True)
+    save_wave(output_path, audio_data)
+
+    print(f"🎧 Saved: {output_path}")
+    return output_path

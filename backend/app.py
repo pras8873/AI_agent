@@ -105,7 +105,6 @@ def process_images():
     print("🎬 Processing images")
 
     data = request.json
-    token = data.get("token")   # 👈 VERY IMPORTANT
     topic = data.get("topic", "default")
 
     folder = os.path.join("output", topic.replace(" ", "_"), "images")
@@ -113,16 +112,20 @@ def process_images():
 
     images = []
 
+    import time
+
     for scene in data.get("scenes", []):
         img_path = generate_image(
             scene["image_prompt"],
             folder,
-            scene["scene_no"],
-            token
+            scene["scene_no"]
         )
 
         if img_path:
             images.append(img_path)
+
+        # 🔥 WAIT to avoid rate limit
+        time.sleep(5)
 
     return {
         "status": "success",
@@ -132,6 +135,77 @@ def process_images():
 @app.route('/output/<path:filename>')
 def serve_image(filename):
     return send_from_directory('output', filename)
+from services.video_service import generate_video
 
+@app.route("/generate-video", methods=["POST"])
+def generate_video_route():
+    print("🎬 Video generation started")
+
+    data = request.json
+    topic = data.get("topic", "default")
+
+    folder = os.path.join("output", topic.replace(" ", "_"), "videos")
+    os.makedirs(folder, exist_ok=True)
+
+    videos = []
+
+    for scene in data.get("scenes", []):
+        video_path = generate_video(
+            scene["animation_prompt"],
+            folder,
+            scene["scene_no"]
+        )
+
+        if video_path:
+            videos.append(video_path)
+
+    return {
+        "status": "success",
+        "videos": videos
+    }
+from flask import send_from_directory
+@app.route('/output/<path:filename>')
+def serve_file(filename):
+    return send_from_directory('output', filename)
+
+from flask import send_from_directory
+
+@app.route('/output/<path:filename>')
+def serve_output(filename):
+    return send_from_directory('output', filename)
+
+
+from flask import send_from_directory
+import os
+
+@app.route('/download-image/<path:filename>')
+def download_image(filename):
+    return send_from_directory(
+        directory="output",
+        path=filename,
+        as_attachment=True   # 🔥 THIS FORCES DOWNLOAD
+    )
+
+@app.route('/generate-audio', methods=['POST'])
+def generate_audio():
+    data = request.json
+
+    print("FULL DATA:", data)
+
+    script = data.get("script")
+
+    print("🎙 Script:", script)
+
+    path = generate_voice(script)
+
+    return {"audio_url": "/output/audio.wav"}
+
+@app.route('/download-audio')
+def download_audio():
+    return send_from_directory(
+        "output",
+        "audio.wav",
+        as_attachment=True
+    )
 if __name__ == "__main__":
     app.run(debug=True)
